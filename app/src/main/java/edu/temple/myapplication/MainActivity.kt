@@ -34,4 +34,29 @@ class MainActivity : AppCompatActivity() {
         }
         return true
     }
+
+    private fun saveTimerState(remainingTime: Int, isPaused: Boolean) {
+        getSharedPreferences("TimerPrefs", MODE_PRIVATE).edit().apply {
+            putInt("remainingTime", remainingTime)
+            putBoolean("isPaused", isPaused)
+            apply()
+        }
+    }
+
+    private fun loadTimerState(): Pair<Int, Boolean> {
+        val prefs = getSharedPreferences("TimerPrefs", MODE_PRIVATE)
+        return Pair(
+            prefs.getInt("remainingTime", 100), // Default 100 seconds
+            prefs.getBoolean("isPaused", false)
+        )
+    }
+
+    private fun clearTimerState() {
+        getSharedPreferences("TimerPrefs", MODE_PRIVATE).edit().apply {
+            remove("remainingTime")
+            remove("isPaused")
+            apply()
+        }
+    }
+
 }
