@@ -9,6 +9,7 @@ import android.util.Log
 
 @Suppress("ControlFlowWithEmptyBody")
 class TimerService : Service() {
+    private var remainingTime = 0
 
     private var isRunning = false
 
@@ -82,28 +83,24 @@ class TimerService : Service() {
         }
     }
 
-    inner class TimerThread(private val startValue: Int) : Thread() {
-
+    inner class TimerThread(private var startTime: Int) : Thread() {
         override fun run() {
+            remainingTime = startTime
             isRunning = true
             try {
-                for (i in startValue downTo 1)  {
-                    Log.d("Countdown", i.toString())
-
-                    timerHandler?.sendEmptyMessage(i)
-
-                    while (paused);
+                while (remainingTime > 0) {
+                    timerHandler?.sendEmptyMessage(remainingTime)
+                    while (paused) { sleep(1000) }
                     sleep(1000)
-
+                    remainingTime--
                 }
                 isRunning = false
-            } catch (e: InterruptedException) {
-                Log.d("Timer interrupted", e.toString())
-                isRunning = false
                 paused = false
+                clearTimerState()
+            } catch (e: InterruptedException) {
+                if (paused) saveTimerState(remainingTime, true)
             }
         }
-
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
@@ -115,8 +112,8 @@ class TimerService : Service() {
     }
 
     override fun onDestroy() {
+        if (paused) saveTimerState(remainingTime, true)
         super.onDestroy()
-
         Log.d("TimerService status", "Destroyed")
     }
 
